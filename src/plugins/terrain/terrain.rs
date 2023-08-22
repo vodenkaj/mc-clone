@@ -4,7 +4,8 @@ use bevy::{
 };
 use noise::{NoiseFn, Perlin};
 
-const CHUNK_SIZE: usize = 100;
+const CHUNK_SIZE: usize = 500;
+const TERRAIN_HEIGHT: usize = 20;
 
 pub struct Chunk {
     pub blocks: Vec<Block>,
@@ -29,18 +30,23 @@ fn generate_chunk(
     server: Res<AssetServer>,
 ) {
     let handle: Handle<Image> = server.load("grass.png");
-    let perlin = Perlin::new(200);
+    let perlin = Perlin::new(10);
 
     let mut chunk = Chunk { blocks: Vec::new() };
 
     for x in 0..CHUNK_SIZE {
-        for z in 0..CHUNK_SIZE {
-            let y_perlin = perlin.get([x as f64, 1.64 as f64, z as f64]) as f32;
-            let mut block = Block {
-                position: Vec3::new(x as f32, y_perlin.ceil(), z as f32),
-            };
+        for y in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                let surface_y = TERRAIN_HEIGHT as f32
+                    + (perlin.get([x as f64 * 0.01, z as f64 * 0.01]) as f32 * 20.0);
+                if surface_y > y as f32 {
+                    let block = Block {
+                        position: Vec3::new(x as f32, y as f32, z as f32),
+                    };
 
-            chunk.blocks.push(block);
+                    chunk.blocks.push(block);
+                }
+            }
         }
     }
 
